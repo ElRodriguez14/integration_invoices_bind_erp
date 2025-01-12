@@ -2,20 +2,23 @@ from collections import defaultdict
 from decimal import Decimal, ROUND_HALF_UP
 
 
-def organize_invoices_by_client(invoices):
-    organized_data = defaultdict(list)
+def organize_invoices_by_client_and_currency(invoices):
+    organized_data = defaultdict(lambda: defaultdict(list))
     for invoice in invoices:
         client_name = invoice.get("ClientName", "Unknown")
-        organized_data[client_name].append(invoice)
+        exchange_rate = invoice.get("ExchangeRate", 0)
+        currency = "MXN" if exchange_rate == 1 else "USD"
+        organized_data[client_name][currency].append(invoice)
     return organized_data
 
 
 def add_payment_details_to_invoices(organized_invoices, token, fetch_payment_details_func):
-    for invoices in organized_invoices.values():
-        for invoice in invoices:
-            invoice_id = invoice.get("ID")
-            if invoice_id:
-                invoice["PaymentDetails"] = fetch_payment_details_func(invoice_id, token)
+    for client, currencies in organized_invoices.items():
+        for currency, invoices in currencies.items():
+            for invoice in invoices:
+                invoice_id = invoice.get("ID")
+                if invoice_id:
+                    invoice["PaymentDetails"] = fetch_payment_details_func(invoice_id, token)
 
 
 def format_decimal(value, decimal_places=2):
