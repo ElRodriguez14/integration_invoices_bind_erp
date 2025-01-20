@@ -2,6 +2,7 @@ from fetch_invoices.api import fetch_invoices, fetch_payment_details
 from fetch_invoices.data_processing import organize_invoices_by_client_and_currency, add_payment_details_to_invoices
 from fetch_invoices.csv_handler import export_invoices_to_csv
 from fetch_invoices.email_sender import send_invoices_to_clients
+from fetch_invoices.organized_invoices import unify_clients_by_fiscal_name
 from config.settings import SMTP_CONFIG, API_CONFIG
 
 if __name__ == "__main__":
@@ -13,11 +14,11 @@ if __name__ == "__main__":
     print(f"Invoices organized by ClientName: {len(organized_invoices)} clients")
 
     print("Adding payment details...")
-    add_payment_details_to_invoices(organized_invoices, API_CONFIG["token"], fetch_payment_details)
+    #add_payment_details_to_invoices(organized_invoices, API_CONFIG["token"], fetch_payment_details)
 
     print("Exporting invoices to CSV...")
     output_dir = "output"
-    export_invoices_to_csv(organized_invoices, output_dir)
+    #export_invoices_to_csv(organized_invoices, output_dir)
 
     print("Sending invoices to clients...")
 
@@ -26,6 +27,11 @@ if __name__ == "__main__":
     smtp_user = "integrationbind@gmail.com"  # Tu correo electrónico
     smtp_password = "rzsz lzyn rxxx yqsy"  # Tu contraseña
 
-    send_invoices_to_clients(organized_invoices, smtp_server, smtp_port, smtp_user, smtp_password)
+    #unify_clients_by_fiscal_name(organized_invoices)
+
+    list_clients = []
+    for client in organized_invoices:
+        list_clients.append(client)
+    send_invoices_to_clients(organized_invoices, smtp_server, smtp_port, smtp_user, smtp_password, list_clients)
 
 
