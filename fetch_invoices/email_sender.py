@@ -270,7 +270,7 @@ def send_invoices_to_clients(organized_invoices, smtp_server, smtp_port, smtp_us
                         if balance_vencido_usd != 0:
                             body_html += f"""                    
                                     <!-- Tabla para USD -->
-                                    <p>Balance encido para <strong>{name}</strong></p>
+                                    <p>Balance Vencido para <strong>{name}</strong></p>
                                     <table style="border-collapse: collapse; text-align: left; margin-bottom: 15px;">
                                         <tr>
                                             <td style="padding: 4px; border: 2px solid black; background-color: #307BDA; color: #000000; width: 80px; height: 25px; text-align: center; white-space: nowrap;"><strong>USD:</strong></td>
@@ -312,8 +312,11 @@ def send_invoices_to_clients(organized_invoices, smtp_server, smtp_port, smtp_us
                         # Agregar archivo a la lista de adjuntos
                         attachment_paths.append(file_path)
 
+                body_html += """
+                    <p><br /><br /><strong>Cordial saludo</strong>, muchas gracias.</p>
+                """
                 body_html += f"""
-                    <img src="cid:image_2" alt="Second Image" style="width:676px; margin-top: 137px;">
+                    <img src="cid:image_2" alt="Second Image" style="width:676px; margin-top: 20px; margin-bottom: 0;">
                     </body>
                     </html>
                     """

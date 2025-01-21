@@ -85,8 +85,8 @@ def export_invoices_to_csv(organized_invoices, output_dir="output"):
             with open(file_path, mode="w", newline="", encoding="utf-8") as file:
                 writer = csv.writer(file)
                 # Escribir el encabezado
-                writer.writerow(["Fecha", "Descripcion", "Factura", "PO", "Fecha Vencimiento",
-                                 "Total", "Balance", "Dias Vencidos"])
+                writer.writerow(["Fecha", "Descripcion", "Factura", "PO", "Fecha Vencimiento", "Dias Vencidos",
+                                 "Total", "Balance"])
 
                 accumulated_balance = Decimal("0")
                 # Escribir los datos
@@ -108,7 +108,7 @@ def export_invoices_to_csv(organized_invoices, output_dir="output"):
                         formatted_accumulated_balance = format_decimal(accumulated_balance)
                         writer.writerow([
                             invoice_date, "Factura", int(invoice_id or 0), int(purchase_order or 0),
-                            expiration_date, total, formatted_accumulated_balance, int(days_overdue)
+                            expiration_date, int(days_overdue), total, formatted_accumulated_balance
                         ])
                     else:
                         # Agregar fila de factura sin cambios
@@ -116,7 +116,7 @@ def export_invoices_to_csv(organized_invoices, output_dir="output"):
                         formatted_accumulated_balance = format_decimal(accumulated_balance)
                         writer.writerow([
                             invoice_date, "Factura", int(invoice_id or 0), int(purchase_order or 0),
-                            expiration_date, total, formatted_accumulated_balance, int(days_overdue)
+                            expiration_date, int(days_overdue), total, formatted_accumulated_balance
                         ])
 
                     if credit_notes > 0:
@@ -124,7 +124,7 @@ def export_invoices_to_csv(organized_invoices, output_dir="output"):
                         formatted_balance_nt = format_decimal(accumulated_balance)
 
                         # Agregar la fila de credit notes
-                        writer.writerow([invoice_date, "Nota Credito", "", "", "",
+                        writer.writerow([invoice_date, "Nota Credito", "", "", "", "",
                                          f"({credit_notes})", formatted_balance_nt])
 
                     # Agregar los pagos
@@ -142,7 +142,7 @@ def export_invoices_to_csv(organized_invoices, output_dir="output"):
                             formatted_remaining = format_decimal(accumulated_balance)
 
                             # Agregar la fila de pago
-                            writer.writerow([application_date, "Pago", "", "", "",
+                            writer.writerow([application_date, "Pago", "", "", "", "",
                                              f"({formatted_amount_payment})", formatted_remaining])
 
             print(f"Invoices for client {client} in {currency} exported to {file_path}")

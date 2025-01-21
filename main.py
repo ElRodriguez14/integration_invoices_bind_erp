@@ -14,11 +14,11 @@ if __name__ == "__main__":
     print(f"Invoices organized by ClientName: {len(organized_invoices)} clients")
 
     print("Adding payment details...")
-    #add_payment_details_to_invoices(organized_invoices, API_CONFIG["token"], fetch_payment_details)
+    add_payment_details_to_invoices(organized_invoices, API_CONFIG["token"], fetch_payment_details)
 
     print("Exporting invoices to CSV...")
     output_dir = "output"
-    #export_invoices_to_csv(organized_invoices, output_dir)
+    export_invoices_to_csv(organized_invoices, output_dir)
 
     print("Sending invoices to clients...")
 
