@@ -10,6 +10,8 @@ from email import encoders
 from datetime import datetime
 from email.mime.image import MIMEImage
 
+import win32com.client as win32
+
 
 def get_client_fiscal(client_name):
     # Diccionario con los correos electrónicos de los clientes
@@ -61,8 +63,8 @@ def get_client_fiscal(client_name):
 def get_client_emails(client_name):
     # Diccionario con los correos electrónicos de los clientes
     client_emails = {
-        "VENTA AL PUBLICO EN GENERAL - RB": ["germanrodriguez1@gmail.com"],
-        "CARNES Y ABARROTES A A A": ["germanrodriguez1@gmail.com"],
+        "VENTA AL PUBLICO EN GENERAL - RB": ["oscarduvan20667@gmail.com"],
+        "CARNES Y ABARROTES A A A": ["oscarduvan20667@gmail.com"],
 
     }
     return client_emails.get(client_name, [])  # Retorna None si no encuentra el cliente
@@ -75,7 +77,10 @@ def clean_filename(client_name):
 
 def send_email_with_attachment(to_email, subject, html_body, attachment_paths, smtp_server, smtp_port, smtp_user,
                                smtp_password, client_name, image_paths=None):
-    msg = MIMEMultipart()
+
+    """
+    Code for GMAIL
+        msg = MIMEMultipart()
     msg['From'] = smtp_user
     msg['To'] = to_email
     msg['Subject'] = subject
@@ -84,15 +89,15 @@ def send_email_with_attachment(to_email, subject, html_body, attachment_paths, s
     msg.attach(MIMEText(html_body, 'html'))
 
     # Adjuntar cada archivo CSV
-    """
-    for attachment_path in attachment_paths:
-        part = MIMEBase('application', "octet-stream")
-        with open(attachment_path, "rb") as file:
-            part.set_payload(file.read())
-        encoders.encode_base64(part)
-        part.add_header('Content-Disposition', f'attachment; filename={os.path.basename(attachment_path)}')
-        msg.attach(part)
-    """
+
+    #for attachment_path in attachment_paths:
+    #    part = MIMEBase('application', "octet-stream")
+    #    with open(attachment_path, "rb") as file:
+    #        part.set_payload(file.read())
+    #    encoders.encode_base64(part)
+    #    part.add_header('Content-Disposition', f'attachment; filename={os.path.basename(attachment_path)}')
+    #    msg.attach(part)
+
     try:
         # Agregar imágenes si las rutas son válidas
         if image_paths:
@@ -117,68 +122,112 @@ def send_email_with_attachment(to_email, subject, html_body, attachment_paths, s
         print(f"Email sent successfully for Client {client_name} to {to_email}")
     except Exception as e:
         print(f"Failed to send email to {to_email}: {e}")
+    """
+
+    # Code for Outlook
+
+    outlook = win32.Dispatch("Outlook.Application")
+    mail = outlook.CreateItem(0)
+
+
+    # Seleccionar la cuenta de envío (si se especifica)
+    # Cuenta a usar de las que tenga en Outlook registradas
+    from_account = "oscar_rodriguez_1402@hotmail.com"
+
+    if from_account:
+        # Obtener todas las cuentas configuradas en Outlook
+        accounts = outlook.Session.Accounts
+        for account in accounts:
+            if account.DisplayName == from_account:
+                mail.SendUsingAccount = account
+                break
+        else:
+            print(f"Cuenta '{to_email}' no encontrada, utilizando la cuenta predeterminada.")
+
+    mail.to = to_email
+    mail.Subject = subject
+    mail.HTMLBody = html_body
+
+    # Cuerpo del mensaje en HTML
+
+    # Adjuntar cada archivo CSV
+    #for attachment_path in attachment_paths:
+    #    part = MIMEBase('application', "octet-stream")
+    #    with open(attachment_path, "rb") as file:
+    #        part.set_payload(file.read())
+    #    encoders.encode_base64(part)
+    #    part.add_header('Content-Disposition', f'attachment; filename={os.path.basename(attachment_path)}')
+    #    msg.attach(part)
+
+    try:
+        # Agregar imágenes si las rutas son válidas
+        for i, image_path in enumerate(image_paths):
+            absolute_path = os.path.abspath(image_path)
+
+            if os.path.exists(absolute_path):
+                attachment = mail.Attachments.Add(absolute_path)
+                # Asignar un Content-ID único
+                content_id = f"image_{i + 1}"
+                attachment.PropertyAccessor.SetProperty("http://schemas.microsoft.com/mapi/proptag/0x3712001E",
+                                                        content_id)
+                # Incluir la imagen en el HTML con su CID
+                html_body += f'<img src="cid:{content_id}" style="display: block; margin: 10px auto;">'
+                print(f"Image {i + 1} attached with CID: {content_id}")
+            else:
+                print(f"Image {image_path} not found.")
+
+        mail.Send()
+
+        print(f"Email sent successfully for Client {client_name} to {to_email}")
+    except Exception as e:
+        print(f"Failed to send email to {to_email}: {e}")
 
 
 def csv_to_html_table(csv_path, name, moneda):
     # Leer el archivo CSV con pandas
     df = pd.read_csv(csv_path)
-    df = df.fillna("")
-    columns_to_convert = ['Factura', 'PO', 'Dias Vencidos']
+    df = df.fillna("")  # Llenar valores NaN con cadena vacía
 
+    # Convertir columnas específicas
+    columns_to_convert = ['Factura', 'PO', 'Dias Vencidos']
     for column in columns_to_convert:
         if column in df.columns:  # Verificar si la columna existe en el DataFrame
-            # Convertir a enteros si es posible, manejando errores
-            #df[column] = pd.to_numeric(df[column], errors='coerce').fillna(0).astype('Int64')
             df[column] = pd.to_numeric(df[column], errors='coerce').apply(
                 lambda x: int(x) if isinstance(x, float) and x.is_integer() else "" if pd.isna(x) else x)
 
-    # Columnas a formatear con separadores de miles y decimales
-
+    # Formatear las columnas con decimales
     columns_with_decimals = ['Total', 'Balance']
     for column in columns_with_decimals:
-        if column in df.columns:  # Verificar si la columna existe en el DataFrame
+        if column in df.columns:
             df[column] = df[column].apply(
                 lambda x: (
-                    f"({abs(float(x.strip('()'))):,.2f})"  # Si el valor estaba entre paréntesis
-                    if isinstance(x, str) and x.startswith("(") and x.endswith(")")
+                    f"({abs(float(x.strip('()'))):,.2f})" if isinstance(x, str) and x.startswith("(") and x.endswith(
+                        ")")
                     else f"{float(x):,.2f}"  # Formato estándar de número con coma y punto
-                ) if isinstance(x, (int, float, str)) and pd.notna(x) else x  # Asegurarse de que no sea NaN
+                ) if isinstance(x, (int, float, str)) and pd.notna(x) else x
             )
 
-    # Convertir el DataFrame en tabla HTML
+    # Convertir el DataFrame en tabla HTML con clases
     html_table = df.to_html(index=False, border=1, classes="table", justify="center")
-    # Agregar un título a la tabla según la moneda
-    style = """
-        <style>
-            table.table {
-                width: 100%;
-                border-collapse: collapse;
-                margin: 20px 0;
-            }
-            table.table th, table.table td {
-                padding: 20px 30px;  /* Aumento el padding de las celdas */
-                text-align: left;
-                border: 2px solid #ddd;  /* Aumento el grosor del borde */
-                font-size: 18px;  /* Aumento el tamaño de la fuente */
-            }
-            table.table th {
-                background-color: #f2f2f2;
-                font-weight: bold;
-            }
-            table.table td {
-                font-size: 18px;  /* Aumento el tamaño de la fuente */
-                line-height: 1.5;  /* Ajuste en el alto de las filas */
-            }
 
-            /* Aplicar fondo azul claro a las primeras columnas */
-            table.table td:nth-child(1), table.table th:nth-child(1),
-            table.table td:nth-child(2), table.table th:nth-child(2) {
-                background-color: #d1e7ff;  /* Azul claro */
-            }
-        </style>
-    """
+    # Estilizar la primera fila (encabezados) y las columnas
+
+    html_table = html_table.replace('<table ',
+                                    '<table style="border-collapse: collapse; border: 2px solid black;" ')  # Borde grueso
+    html_table = html_table.replace('<thead>',
+                                    '<thead style="background-color: #307BDA; color: black; font-weight: bold;">')  # Color negro en el encabezado
+
+    # Establecer un ancho fijo para todas las columnas (120px)
+    html_table = html_table.replace('<th>', '<th style="width: 120px; text-align: center;">')
+    html_table = html_table.replace('<td>', '<td style="width: 120px; text-align: center;">')
+
+
+    # Título con la moneda
     title = f"<h3>Facturas de {name} en {'Pesos Mexicanos' if moneda == 'MXN' else 'Dólares Americanos'}</h3>"
-    return style + title + html_table
+
+    # Devuelvo el HTML final con el título y la tabla estilizada
+    html_final = title + html_table
+    return html_final
 
 
 def generate_file_name(client_name, currency):
@@ -295,7 +344,6 @@ def send_invoices_to_clients(organized_invoices, smtp_server, smtp_port, smtp_us
                 image_paths = ["images/first_logo.png", "images/second_logo.png"]
 
                 attachment_paths = []
-
 
                 for currency in currency_types:
                     for name in names:
