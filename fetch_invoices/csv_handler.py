@@ -129,7 +129,13 @@ def export_invoices_to_csv(organized_invoices, output_dir="output"):
 
                     # Agregar los pagos
                     if "PaymentDetails" in invoice:
-                        for payment in invoice["PaymentDetails"]:
+
+                        sorted_payments = sorted(
+                            invoice["PaymentDetails"],
+                            key=lambda x: format_date_to_yyyy_mm_dd(x.get("ApplicationDate"))
+                        )
+
+                        for payment in sorted_payments:
                             if currency == "USD":
                                 amount = Decimal(payment.get("Amount")) / Decimal(payment.get("ExchangeRate"))
                             else:

@@ -1,9 +1,9 @@
-from fetch_invoices.api import fetch_invoices, fetch_payment_details
+from fetch_invoices.api import fetch_invoices, fetch_payment_details, fetch_clients
 from fetch_invoices.data_processing import organize_invoices_by_client_and_currency, add_payment_details_to_invoices
 from fetch_invoices.csv_handler import export_invoices_to_csv
 from fetch_invoices.email_sender import send_invoices_to_clients
 from fetch_invoices.organized_invoices import unify_clients_by_fiscal_name
-from config.settings import SMTP_CONFIG, API_CONFIG
+from config.settings import SMTP_CONFIG, API_CONFIG, API_CLIENTS
 
 if __name__ == "__main__":
     print("Fetching invoices...")
@@ -29,9 +29,21 @@ if __name__ == "__main__":
 
     #unify_clients_by_fiscal_name(organized_invoices)
 
+    print("Fetching Clients...")
+    data_clients = fetch_clients(API_CLIENTS["url"], API_CLIENTS["token"])
+    dict_clients_emails = {}
+    for item in data_clients:
+        client_name = item["ClientName"]
+        emails = item["Email"]
+
+        if emails:
+            email_list = emails.split(",") if emails else []
+            dict_clients_emails[client_name] = email_list
+
     list_clients = []
     for client in organized_invoices:
         list_clients.append(client)
-    send_invoices_to_clients(organized_invoices, smtp_server, smtp_port, smtp_user, smtp_password, list_clients)
+    send_invoices_to_clients(organized_invoices, smtp_server, smtp_port, smtp_user, smtp_password, list_clients,
+                             dict_clients_emails)
 
 

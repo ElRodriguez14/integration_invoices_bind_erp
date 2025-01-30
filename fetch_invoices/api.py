@@ -1,6 +1,7 @@
 import requests
 import time
 
+
 def fetch_invoices(api_url, token):
     headers = {"Authorization": f"Bearer {token}"}
     invoices = []
@@ -20,7 +21,7 @@ def fetch_invoices(api_url, token):
 
 
 def fetch_payment_details(invoice_id, token):
-    payment_url = f"http://api.bind.com.mx/api/Invoices/Payment/{invoice_id}"
+    payment_url = f"http://api.bind.com.mx/api/Invoices/Payment/{invoice_id}?$filter=StatusCode eq 0"
     headers = {"Authorization": f"Bearer {token}"}
 
     while True:
@@ -33,3 +34,22 @@ def fetch_payment_details(invoice_id, token):
         else:
             print(f"Error {response.status_code}: {response.text}")
             return []
+
+
+def fetch_clients(api_url, token):
+    headers = {"Authorization": f"Bearer {token}"}
+    clients = []
+    next_link = api_url
+
+    while next_link:
+        print(f"Fetching data from: {next_link}")
+        response = requests.get(next_link, headers=headers)
+        if response.status_code == 200:
+            data = response.json()
+            clients.extend(data.get("value", []))
+            next_link = data.get("nextLink")
+        else:
+            print(f"Error {response.status_code}: {response.text}")
+            break
+    return clients
+

@@ -2,6 +2,7 @@ import smtplib
 import re
 import os
 import pandas as pd
+import imghdr
 
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -16,46 +17,50 @@ import win32com.client as win32
 def get_client_fiscal(client_name):
     # Diccionario con los correos electrónicos de los clientes
     client_fiscal = {
-        "VENTA AL PUBLICO EN GENERAL - SP": "SAUL PEREZ",
-        "VENTA AL PUBLICO EN GENERAL - RB": "RAUL BOVIO GUERRERO",
+        "VENTA AL PUBLICO - CZ": "CARNICOS NACIONALES ZAPATA SA DE CV",
+        "VENTA AL PUBLICO - ES": "",
+        "VENTA AL PUBLICO - GH": "GLENDA BELEM ROCHIN HERNANDEZ",
+        "VENTA AL PUBLICO - IA": "ISA ALIMENTOS SA DE CV",
+        "VENTA AL PUBLICO - LA": "LUIS ARREGUIN",
+        "VENTA AL PUBLICO - OML": "OMAR LARA",
+        "VENTA AL PUBLICO EN GENERAL  - AL": "HILDA ALICIA LARIOS HIDALGO",
         "VENTA AL PUBLICO EN GENERAL  - CF": "CARNICOS LA FORTUNA",
-        "VENTA AL PUBLICO EN GENERAL - IA": "ISA ALIMENTOS",
-        "VENTA AL PUBLICO EN GENERAL - RS": "ROGELIO SERRANO",
-        "VENTA AL PUBLICO EN GENERAL -AM": "ADRIAN MONTIEL",
-        "VENTA AL PUBLICO EN GENERAL - AB": "ARTURO BARRADAS",
-        "VENTA AL PUBLICO EN GENERAL  - RC": "RAUL COSME",
-        "VENTAS AL PUBLICO EN GENERAL - DG": "DON GATO",
-        "VENTA AL PUBLICO EN GENERAL - IE": "IVAN ESTRADA ALVARADO",
+        "VENTA AL PUBLICO EN GENERAL  - FC": "MARTINEZ COBOS FRANCISCO",
+        "VENTA AL PUBLICO EN GENERAL -  FCH": "",
+        "VENTA AL PUBLICO EN GENERAL  - JE": "JORGE ESQUIVEL CASTRO",
+        "VENTA AL PUBLICO EN GENERAL  - JR": "JASSO RODRIGUEZ CRUZ",
+        "VENTA AL PUBLICO EN GENERAL  - MA": "JOSE MANUEL ALVARADO",
         "VENTA AL PUBLICO EN GENERAL  - MC": "MANUEL JESUS CORONADO SOSA",
-        "VENTA AL PUBLICO EN GENERAL - FL": "FRANCISCO LOPEZ",
-        "VENTA AL PUBLICO EN GENERAL - ML": "MARIO LOPEZ",
-        "VENTA AL PUBLICO EN GENERAL - COP": "COPOCAR",
-        "VENTA AL PUBLICO EN GENERAL - YC": "YESSICA CAICERO MURRIETA",
-        "VENTA AL PUBLICO EN GENERAL - MN": "MIGUEL ANGEL NAVARRO DIAZ",
-        "VENTA AL PUBLICO EN GENERAL - AQ": "AQUA",
-        "VENTA AL PUBLICO EN GENERAL - COV": "COVAGO",
-        "VENTA AL PUBLICO EN GENERAL - JR": "JASSO CRUZ",
-        "VENTA AL PUBLICO EN GENERAL - GT": "GILDARDO TORRES",
-        "VENTA AL PUBLICO EN GENERAL - MS": "MIGUEL ANGEL SANTIAGO HERNANDEZ",
-        "VENTA AL PUBLICO EN GENERAL - JM": "JONATHAN MARTINEZ BUSTOS",
-        "VENTA AL PUBLICO EN GENERAL - JC": "JAVIER CASTILLO",
-        "VENTA AL PUBLICO EN GENERAL - JS": "JUAN SANTIAGO SANTIAGO",
-        "VENTA AL PUBLICO EN GENERAL - OML": "OBRADOR Y EMPACADORA LARA",
-        "VENTA AL PUBLICO EN GENERAL - FCH": "FERNANDO CHAVEZ",
-        "VENTA AL PUBLICO GENERAL - OL": "OBRADOR Y EMPACADORA LARA",
-        "VENTA AL PUBLICO EN GENERAL - EG": "ROSARIO GONZALEZ SERRANO",
-        "VENTA AL PUBLICO EN GENERAL - JE": "JORGE ESQUIVEL CASTRO",
-        "VENTA AL PUBLICO EN GENERAL - LA": "LUIS ARREGUIN",
+        "VENTA AL PUBLICO EN GENERAL  - MN": "MIGUEL NAVARRO",
+        "VENTA AL PUBLICO EN GENERAL  - MV": "MIGUEL VALVERDE",
+        "VENTA AL PUBLICO EN GENERAL - AB": "ARTURO BARRADAS",
         "VENTA AL PUBLICO EN GENERAL - AG": "ABELARDO GONZALEZ",
-        "VENTA AL PUBLICO EN GENERAL - AL": "ALICIA LARIOS",
-        "VENTA AL PUBLICO EN GENERAL - CO": "COPOCAR",
-        "VENTA AL PUBLICO EN GENERAL - SHP": "SERGIO HERNANDEZ PONCE",
-        "VENTA AL PUBLICO EN GENERAL - MG": "MARBUSTELL GRUPO COMERCIAL",
-        "VENTA AL PUBLICO EN GENERAL - MV": "MIGUEL VALVERDE",
-        "VENTA AL PUBLICO EN GENERAL  - MA": "JULIA MUÑOZ",
-        "VENTA AL PUBLICO EN GENERAL - VE": "VICENTE ESTRADA",
-        "VENTA AL PUBLICO EN GENERAL - JV": "JOSE ALFREDO VELA",
-        "VENTA AL PUBLICO EN GENERAL - FC": "FRANCISCO COBOS"
+        "VENTA AL PUBLICO EN GENERAL - AQ": "AQUA ELIT  SA DE CV",
+        "VENTA AL PUBLICO EN GENERAL - CO": "",
+        "VENTA AL PUBLICO EN GENERAL-  COP": "COPOCAR SA DE CV",
+        "VENTA AL PUBLICO EN GENERAL - COV": "COVAGO CARNES SA DE CV",
+        "VENTA AL PUBLICO EN GENERAL - EG": "ROSARIO GONZALEZ SERRANO",
+        "VENTA AL PUBLICO EN GENERAL - FL": "FRANCISCO LOPEZ RAMIREZ",
+        "VENTA AL PUBLICO EN GENERAL - GT": "GILDARDO TORRES",
+        "VENTA AL PUBLICO EN GENERAL - IE": "IVAN ESTRADA ALVARADO",
+        "VENTA AL PUBLICO EN GENERAL - JC": "JAVIER CASTILLO VIVEROS",
+        "VENTA AL PUBLICO EN GENERAL - JM": "JONATHAN MARTINEZ BUSTOS",
+        "VENTA AL PUBLICO EN GENERAL - JRL": "",
+        "VENTA AL PUBLICO EN GENERAL - JS": "JUAN SANTIAGO SANTIAGO",
+        "VENTA AL PUBLICO EN GENERAL - JV": "JOSE ALFREDO VELA BARQUERA",
+        "VENTA AL PUBLICO EN GENERAL - JVG": "JOSUE VILLALPANDO GUZMAN",
+        "VENTA AL PUBLICO EN GENERAL - MG": "MARBUSTELL GRUPO COMERCIAL SA DE CV",
+        "VENTA AL PUBLICO EN GENERAL - ML": "MARIO LOPEZ VANZINI",
+        "VENTA AL PUBLICO EN GENERAL - MS": "MIGUEL ANGEL SANTIAGO HERNANDEZ",
+        "VENTA AL PUBLICO EN GENERAL - RB": "RAUL BOVIO GUERRERO",
+        "VENTA AL PUBLICO EN GENERAL - RC": "RAUL COSME",
+        "VENTA AL PUBLICO EN GENERAL - RS": "EZEQUIEL VAZQUEZ SERRANO",
+        "VENTA AL PUBLICO EN GENERAL - SP": "SAUL PEREZ",
+        "VENTA AL PUBLICO EN GENERAL - VE": "VICENTE ESTRADA DOMINGUEZ",
+        "VENTA AL PUBLICO EN GENERAL - YC": "CARNICERIA LA CABAÑA",
+        "VENTA AL PUBLICO EN GENERAL -AM": "ADRIAN MONTIEL PEÑA",
+        "VENTA AL PUBLICO GENERAL - OL": "OMAR LARA",
+        "VENTAS AL PUBLICO EN GENERAL - DG": "COMERCIALIZADORA MIZTLI & ELIZ S DE RL DE CV"
     }
     return client_fiscal.get(client_name, [])
 
@@ -63,9 +68,128 @@ def get_client_fiscal(client_name):
 def get_client_emails(client_name):
     # Diccionario con los correos electrónicos de los clientes
     client_emails = {
-        "VENTA AL PUBLICO EN GENERAL - RB": ["oscarduvan20667@gmail.com"],
         "CARNES Y ABARROTES A A A": ["oscarduvan20667@gmail.com"],
-
+        "MIGUEL ANGEL SANTIAGO HERNANDEZ": ["oscarduvan20667@gmail.com"],
+        "GRUPO BRAVO NUÑO": ["oscarduvan20667@gmail.com"],
+        "DISTRIBUIDORA DE CARNES EL JAROCHO": ["oscarduvan20667@gmail.com"],
+        "PROCESADORA Y COMERCIALIZADORA CAMPEROS": ["oscarduvan20667@gmail.com"],
+        "DISTRIBUIDORA DE CARNE LA ORIENTAL": ["oscarduvan20667@gmail.com"],
+        "VENTA AL PUBLICO EN GENERAL - RB": ["oscarduvan20667@gmail.com"],
+        "JOSE ROBERTO COVARRUBIAS GARCIA": ["oscarduvan20667@gmail.com"],
+        "COMERCIALIZADORA MK DE SAN JUAN": ["oscarduvan20667@gmail.com"],
+        "CENTRO DE CARNES SAN ROBERTO": ["oscarduvan20667@gmail.com"],
+        "GRAFOLER": ["oscarduvan20667@gmail.com"],
+        "SIGMA FOODSERVICE COMERCIAL": ["oscarduvan20667@gmail.com"],
+        "AMERICA NANCY JAIMES OCAMPO": ["oscarduvan20667@gmail.com"],
+        "VENTA AL PUBLICO EN GENERAL - SP": ["oscarduvan20667@gmail.com"],
+        "JESUS ALFONZO LOPEZ BERNAL": ["oscarduvan20667@gmail.com"],
+        "DISTRIBUIDORA DE PORCINOS": ["oscarduvan20667@gmail.com"],
+        "PROCESADORA DE CARNES EL JAROCHO": ["oscarduvan20667@gmail.com"],
+        "VIANSA ALIMENTOS": ["oscarduvan20667@gmail.com"],
+        "VENTA AL PUBLICO EN GENERAL  - CF": ["oscarduvan20667@gmail.com"],
+        "ALFONSO ESPINDOLA SALDAÑA": ["oscarduvan20667@gmail.com"],
+        "COMERCIALIZADORA DE CARNES MOLOLO": ["oscarduvan20667@gmail.com"],
+        "JOSE ANTONIO ARRONA CHIQUITO": ["oscarduvan20667@gmail.com"],
+        "ARCADIO LEDO BERISTAIN": ["oscarduvan20667@gmail.com"],
+        "MARIO AARON PADILLA OLIVAS": ["oscarduvan20667@gmail.com"],
+        "SOFIA LOMELI VARGAS": ["oscarduvan20667@gmail.com"],
+        "MICAHELINA BUSTOS FIGUEROA": ["oscarduvan20667@gmail.com"],
+        "JUAN ANGEL GONZALEZ TORRES": ["oscarduvan20667@gmail.com"],
+        "SDR ALIMENTOS": ["oscarduvan20667@gmail.com"],
+        "PROCESADORA DE ALIMENTOS OMEX": ["oscarduvan20667@gmail.com"],
+        "AQUA TERRA IMPORTS": ["oscarduvan20667@gmail.com"],
+        "MIGUEL ANGEL NAVARRO DIAZ": ["oscarduvan20667@gmail.com"],
+        "DISTRIBUIDORA DUMY": ["oscarduvan20667@gmail.com"],
+        "ABASTECEDORA DE CARNICOS DEL SURESTE": ["oscarduvan20667@gmail.com"],
+        "CARNES DELICIOSAS": ["oscarduvan20667@gmail.com"],
+        "ORGANIZACION REAL FOODS": ["oscarduvan20667@gmail.com"],
+        "YESSICA CAICERO MURRIETA": ["oscarduvan20667@gmail.com"],
+        "COMERCIALIZADORA DE CARNES LA HEROICA": ["oscarduvan20667@gmail.com"],
+        "PROCESADORA Y EMPACADORA DE CARNES SAN JOSE": ["oscarduvan20667@gmail.com"],
+        "ALAN DANIEL GARCIA RODRIGUEZ": ["oscarduvan20667@gmail.com"],
+        "VENTAS AL PUBLICO EN GENERAL - DG": ["oscarduvan20667@gmail.com"],
+        "COMERCIALIZADORA DE CARNES JIVE DE JALISCO": ["oscarduvan20667@gmail.com"],
+        "CARNICOS DM": ["oscarduvan20667@gmail.com"],
+        "DELIMARKETS": ["oscarduvan20667@gmail.com"],
+        "ROGELIO HERNANDEZ SOTO": ["oscarduvan20667@gmail.com"],
+        "EMPACADORA ARIALY": ["oscarduvan20667@gmail.com"],
+        "DISTRIBUIDORA DE CARNES SELECTAS MARCAF": ["oscarduvan20667@gmail.com"],
+        "IDE FOODS": ["oscarduvan20667@gmail.com"],
+        "BLANCA ROSA URIAS GARCIA": ["oscarduvan20667@gmail.com"],
+        "PESCADOS Y MARISCOS DEL BAJIO": ["oscarduvan20667@gmail.com"],
+        "VENTA AL PUBLICO EN GENERAL - AB": ["oscarduvan20667@gmail.com"],
+        "SERVI CARNES DE OCCIDENTE": ["oscarduvan20667@gmail.com"],
+        "COMERCIALIZADORA MEXPORK": ["oscarduvan20667@gmail.com"],
+        "VICTOR HUGO ALDAMA DERAS": ["oscarduvan20667@gmail.com"],
+        "ABASTO DE 4 CARNES": ["oscarduvan20667@gmail.com"],
+        "TRANSFORMACION CARNICA": ["oscarduvan20667@gmail.com"],
+        "PROTEINAS IMPORTADAS DE ALTA GAMA": ["oscarduvan20667@gmail.com"],
+        "COMERCIALIZADORA PORCICOLA MEXICANA": ["oscarduvan20667@gmail.com"],
+        "COMERCIALIZADORA DE CREMERIA Y CARNICOS DEL AHORRO": ["oscarduvan20667@gmail.com"],
+        "VENTA AL PUBLICO EN GENERAL -AM": ["oscarduvan20667@gmail.com"],
+        "GIANT FOOD SERVICE": ["oscarduvan20667@gmail.com"],
+        "PROCESADORA DE CARNES DON TIMO": ["oscarduvan20667@gmail.com"],
+        "HURZEN FOODS": ["oscarduvan20667@gmail.com"],
+        "GRANJERO FELIZ": ["oscarduvan20667@gmail.com"],
+        "ALFREDO CABAÑAS GUZMAN": ["oscarduvan20667@gmail.com"],
+        "BOCADOS JL": ["oscarduvan20667@gmail.com"],
+        "IMPULSORA DE BIENES ALAMEDA": ["oscarduvan20667@gmail.com"],
+        "EMPACADORA CELAYA": ["oscarduvan20667@gmail.com"],
+        "BULMARO CASTILLO GUZMAN": ["oscarduvan20667@gmail.com"],
+        "VENTA AL PUBLICO EN GENERAL - IE": ["oscarduvan20667@gmail.com"],
+        "PRODUCTOS CARNICOS AR": ["oscarduvan20667@gmail.com"],
+        "MANUEL JESUS CORONADO SOSA": ["oscarduvan20667@gmail.com"],
+        "CARNES Y QUESOS REGIONALES": ["oscarduvan20667@gmail.com"],
+        "LA FRONTERA DISTRIBUIDORA DE CONGELADOS": ["oscarduvan20667@gmail.com"],
+        "OSCAR EMILIO GARCIA GONZALEZ": ["oscarduvan20667@gmail.com"],
+        "MN-BUSINESS SOLUTIONS": ["oscarduvan20667@gmail.com"],
+        "CARLOS JESUS CANTO EUAN": ["oscarduvan20667@gmail.com"],
+        "GRUPO DISTRIBUIDOR RANGEL GARDU&O": ["oscarduvan20667@gmail.com"],
+        "VENTA AL PUBLICO EN GENERAL  - MC": ["oscarduvan20667@gmail.com"],
+        "SUNLAND BROTHERS": ["oscarduvan20667@gmail.com"],
+        "VENTA AL PUBLICO EN GENERAL - IA": ["oscarduvan20667@gmail.com"],
+        "PRAC ALIMENTOS": ["oscarduvan20667@gmail.com"],
+        "PROVEEDORA DE CARNES AGUASCALIENTES": ["oscarduvan20667@gmail.com"],
+        "DISTRIBUIDORA DE CARNES ATEMAJAC": ["oscarduvan20667@gmail.com"],
+        "EMPACADORA Y PROCESADORA DE MONTERREY": ["oscarduvan20667@gmail.com"],
+        "VENTA AL PUBLICO EN GENERAL - ML": ["oscarduvan20667@gmail.com"],
+        "VENTA AL PUBLICO EN GENERAL - FL": ["oscarduvan20667@gmail.com"],
+        "SUPER CARNICERIAS HERNANDEZ": ["oscarduvan20667@gmail.com"],
+        "CARLOS DANIEL GARCIA GONZALEZ": ["oscarduvan20667@gmail.com"],
+        "LA CENTRAL SAN JUAN": ["oscarduvan20667@gmail.com"],
+        "PRODUCTOS NEZA": ["oscarduvan20667@gmail.com"],
+        "KAREY ALIMENTOS": ["oscarduvan20667@gmail.com"],
+        "JUAN SANTIAGO SANTIAGO": ["oscarduvan20667@gmail.com"],
+        "CARNICOS NACIONALES ZAPATA": ["oscarduvan20667@gmail.com"],
+        "GLENDA BELEM ROCHIN HERNANDEZ": ["oscarduvan20667@gmail.com"],
+        "F&J TRADING MEAT": ["oscarduvan20667@gmail.com"],
+        "RIGOBERTO DORANTES MONTERO": ["oscarduvan20667@gmail.com"],
+        "EMPACADORA DE CARNES SELECTAS VICTORIA": ["oscarduvan20667@gmail.com"],
+        "SALVADOR AURELIO EGURVIDE PIMENTEL": ["oscarduvan20667@gmail.com"],
+        "VENTA AL PUBLICO EN GENERAL - RS": ["oscarduvan20667@gmail.com"],
+        "RUBEN GUERRERO CENDEJAS": ["oscarduvan20667@gmail.com"],
+        "PRACTICHEFF": ["oscarduvan20667@gmail.com"],
+        "IMPORTADORA SERVICARNES": ["oscarduvan20667@gmail.com"],
+        "ESCUDERO 1°": ["oscarduvan20667@gmail.com"],
+        "ALIMENTOS TAOR": ["oscarduvan20667@gmail.com"],
+        "ABAPROCAR": ["oscarduvan20667@gmail.com"],
+        "LACTEOS Y EMBUTIDOS DIEZ HERMANOS": ["oscarduvan20667@gmail.com"],
+        "SERVICIOS DE COMERCIALIZACION LOGISTICA DEL RIO": ["oscarduvan20667@gmail.com"],
+        "GRUPO QUERETARO CARNES": ["oscarduvan20667@gmail.com"],
+        "GRUPO LUNVEL": ["oscarduvan20667@gmail.com"],
+        "VENTA AL PUBLICO EN GENERAL  - RC": ["oscarduvan20667@gmail.com"],
+        "RAUL BOVIO GUERRERO": ["oscarduvan20667@gmail.com"],
+        "OPERADORA FUTURAMA": ["oscarduvan20667@gmail.com"],
+        "VIO ROCA COMERCIAL": ["oscarduvan20667@gmail.com"],
+        "ROLANDO JAVIER GOMEZ MARTINEZ": ["oscarduvan20667@gmail.com"],
+        "CARNES SELECTAS LA CAPITAL 6731": ["oscarduvan20667@gmail.com"],
+        "SERVICIOS ADUANALES HL": ["oscarduvan20667@gmail.com"],
+        "ROSARIO GONZALEZ SERRANO": ["oscarduvan20667@gmail.com"],
+        "DISTRIBUIDORA DE CARNES SELECTAS RAMPE": ["oscarduvan20667@gmail.com"],
+        "FRIHMSA": ["oscarduvan20667@gmail.com"],
+        "LA FRAILESCA CARNICERIA": ["oscarduvan20667@gmail.com"],
+        "MARIO LOPEZ VANZINI": ["oscarduvan20667@gmail.com"],
+        '"ALIMENTOS KARULY"': ["oscarduvan20667@gmail.com"],
     }
     return client_emails.get(client_name, [])  # Retorna None si no encuentra el cliente
 
@@ -78,9 +202,8 @@ def clean_filename(client_name):
 def send_email_with_attachment(to_email, subject, html_body, attachment_paths, smtp_server, smtp_port, smtp_user,
                                smtp_password, client_name, image_paths=None):
 
-    """
-    Code for GMAIL
-        msg = MIMEMultipart()
+    # Code for GMAIL
+    msg = MIMEMultipart()
     msg['From'] = smtp_user
     msg['To'] = to_email
     msg['Subject'] = subject
@@ -89,7 +212,6 @@ def send_email_with_attachment(to_email, subject, html_body, attachment_paths, s
     msg.attach(MIMEText(html_body, 'html'))
 
     # Adjuntar cada archivo CSV
-
     #for attachment_path in attachment_paths:
     #    part = MIMEBase('application', "octet-stream")
     #    with open(attachment_path, "rb") as file:
@@ -122,8 +244,8 @@ def send_email_with_attachment(to_email, subject, html_body, attachment_paths, s
         print(f"Email sent successfully for Client {client_name} to {to_email}")
     except Exception as e:
         print(f"Failed to send email to {to_email}: {e}")
-    """
 
+    """
     # Code for Outlook
 
     outlook = win32.Dispatch("Outlook.Application")
@@ -182,6 +304,8 @@ def send_email_with_attachment(to_email, subject, html_body, attachment_paths, s
     except Exception as e:
         print(f"Failed to send email to {to_email}: {e}")
 
+    """
+
 
 def csv_to_html_table(csv_path, name, moneda):
     # Leer el archivo CSV con pandas
@@ -217,10 +341,13 @@ def csv_to_html_table(csv_path, name, moneda):
     html_table = html_table.replace('<thead>',
                                     '<thead style="background-color: #307BDA; color: black; font-weight: bold;">')  # Color negro en el encabezado
 
-    # Establecer un ancho fijo para todas las columnas (120px)
-    html_table = html_table.replace('<th>', '<th style="width: 120px; text-align: center;">')
-    html_table = html_table.replace('<td>', '<td style="width: 120px; text-align: center;">')
-
+    # Establecer un tamaño fijo (ancho y alto) y controlar el texto en celdas
+    cell_style = (
+        'width: 160px; height: 40px; text-align: center; '
+        'white-space: nowrap; overflow: hidden; text-overflow: ellipsis;'
+    )
+    html_table = html_table.replace('<th>', f'<th style="{cell_style}">')
+    html_table = html_table.replace('<td>', f'<td style="{cell_style}">')
 
     # Título con la moneda
     title = f"<h3>Facturas de {name} en {'Pesos Mexicanos' if moneda == 'MXN' else 'Dólares Americanos'}</h3>"
@@ -232,7 +359,8 @@ def csv_to_html_table(csv_path, name, moneda):
 
 def generate_file_name(client_name, currency):
     # Reemplazar espacios por "_"
-    sanitized_client_name = client_name.replace(" ", "_").replace("-", "_")
+    sanitized_client_name = (client_name.replace(" ", "_").replace("-", "_").replace('"', "_").replace("&", "_")
+                             .replace("°", "_"))
 
     # Construir el nombre del archivo con moneda y sufijo
     file_name = f"{sanitized_client_name}_{currency}_invoices.csv"
@@ -240,30 +368,138 @@ def generate_file_name(client_name, currency):
     return file_name
 
 
-def send_invoices_to_clients(organized_invoices, smtp_server, smtp_port, smtp_user, smtp_password, list_clients):
+def send_invoices_to_clients(organized_invoices, smtp_server, smtp_port, smtp_user, smtp_password, list_clients,
+                             dict_clients_emails):
+    client_fiscal = {
+        "VENTA AL PUBLICO - CZ": "CARNICOS NACIONALES ZAPATA SA DE CV",
+        "VENTA AL PUBLICO - ES": "",
+        "VENTA AL PUBLICO - GH": "GLENDA BELEM ROCHIN HERNANDEZ",
+        "VENTA AL PUBLICO - IA": "ISA ALIMENTOS SA DE CV",
+        "VENTA AL PUBLICO - LA": "LUIS ARREGUIN",
+        "VENTA AL PUBLICO - OML": "OMAR LARA",
+        "VENTA AL PUBLICO EN GENERAL  - AL": "HILDA ALICIA LARIOS HIDALGO",
+        "VENTA AL PUBLICO EN GENERAL  - CF": "CARNICOS LA FORTUNA",
+        "VENTA AL PUBLICO EN GENERAL  - FC": "MARTINEZ COBOS FRANCISCO",
+        "VENTA AL PUBLICO EN GENERAL -  FCH": "",
+        "VENTA AL PUBLICO EN GENERAL  - JE": "JORGE ESQUIVEL CASTRO",
+        "VENTA AL PUBLICO EN GENERAL  - JR": "JASSO RODRIGUEZ CRUZ",
+        "VENTA AL PUBLICO EN GENERAL  - MA": "JOSE MANUEL ALVARADO",
+        "VENTA AL PUBLICO EN GENERAL  - MC": "MANUEL JESUS CORONADO SOSA",
+        "VENTA AL PUBLICO EN GENERAL  - MN": "MIGUEL NAVARRO",
+        "VENTA AL PUBLICO EN GENERAL  - MV": "MIGUEL VALVERDE",
+        "VENTA AL PUBLICO EN GENERAL - AB": "ARTURO BARRADAS",
+        "VENTA AL PUBLICO EN GENERAL - AG": "ABELARDO GONZALEZ",
+        "VENTA AL PUBLICO EN GENERAL - AQ": "AQUA ELIT  SA DE CV",
+        "VENTA AL PUBLICO EN GENERAL - CO": "",
+        "VENTA AL PUBLICO EN GENERAL-  COP": "COPOCAR SA DE CV",
+        "VENTA AL PUBLICO EN GENERAL - COV": "COVAGO CARNES SA DE CV",
+        "VENTA AL PUBLICO EN GENERAL - EG": "ROSARIO GONZALEZ SERRANO",
+        "VENTA AL PUBLICO EN GENERAL - FL": "FRANCISCO LOPEZ RAMIREZ",
+        "VENTA AL PUBLICO EN GENERAL - GT": "GILDARDO TORRES",
+        "VENTA AL PUBLICO EN GENERAL - IE": "IVAN ESTRADA ALVARADO",
+        "VENTA AL PUBLICO EN GENERAL - JC": "JAVIER CASTILLO VIVEROS",
+        "VENTA AL PUBLICO EN GENERAL - JM": "JONATHAN MARTINEZ BUSTOS",
+        "VENTA AL PUBLICO EN GENERAL - JRL": "",
+        "VENTA AL PUBLICO EN GENERAL - JS": "JUAN SANTIAGO SANTIAGO",
+        "VENTA AL PUBLICO EN GENERAL - JV": "JOSE ALFREDO VELA BARQUERA",
+        "VENTA AL PUBLICO EN GENERAL - JVG": "JOSUE VILLALPANDO GUZMAN",
+        "VENTA AL PUBLICO EN GENERAL - MG": "MARBUSTELL GRUPO COMERCIAL SA DE CV",
+        "VENTA AL PUBLICO EN GENERAL - ML": "MARIO LOPEZ VANZINI",
+        "VENTA AL PUBLICO EN GENERAL - MS": "MIGUEL ANGEL SANTIAGO HERNANDEZ",
+        "VENTA AL PUBLICO EN GENERAL - RB": "RAUL BOVIO GUERRERO",
+        "VENTA AL PUBLICO EN GENERAL - RC": "RAUL COSME",
+        "VENTA AL PUBLICO EN GENERAL - RS": "EZEQUIEL VAZQUEZ SERRANO",
+        "VENTA AL PUBLICO EN GENERAL - SP": "SAUL PEREZ",
+        "VENTA AL PUBLICO EN GENERAL - VE": "VICENTE ESTRADA DOMINGUEZ",
+        "VENTA AL PUBLICO EN GENERAL - YC": "CARNICERIA LA CABAÑA",
+        "VENTA AL PUBLICO EN GENERAL -AM": "ADRIAN MONTIEL PEÑA",
+        "VENTA AL PUBLICO GENERAL - OL": "OMAR LARA",
+        "VENTAS AL PUBLICO EN GENERAL - DG": "COMERCIALIZADORA MIZTLI & ELIZ S DE RL DE CV"
+    }
+
+    names_email = {
+        "VENTA AL PUBLICO - CZ": "CARNICOS NACIONALES ZAPATA SA DE CV",
+        "VENTA AL PUBLICO - ES": "ELIAS SERRANO GONZÁLEZ",
+        "VENTA AL PUBLICO - GH": "GLENDA BELEM ROCHIN HERNANDEZ",
+        "VENTA AL PUBLICO - IA": "ISA ALIMENTOS SA DE CV",
+        "VENTA AL PUBLICO - LA": "LUIS ARREGUIN",
+        "VENTA AL PUBLICO - OML": "OMAR LARA",
+        "VENTA AL PUBLICO EN GENERAL  - AL": "HILDA ALICIA LARIOS HIDALGO",
+        "VENTA AL PUBLICO EN GENERAL  - CF": "CARNICOS LA FORTUNA",
+        "VENTA AL PUBLICO EN GENERAL  - FC": "MARTINEZ COBOS FRANCISCO",
+        "VENTA AL PUBLICO EN GENERAL -  FCH": "FERNANDO CHAVEZ",
+        "VENTA AL PUBLICO EN GENERAL  - JE": "JORGE ESQUIVEL CASTRO",
+        "VENTA AL PUBLICO EN GENERAL  - JR": "JASSO RODRIGUEZ CRUZ",
+        "VENTA AL PUBLICO EN GENERAL  - MA": "JOSE MANUEL ALVARADO",
+        "VENTA AL PUBLICO EN GENERAL  - MC": "MANUEL JESUS CORONADO SOSA",
+        "VENTA AL PUBLICO EN GENERAL  - MN": "MIGUEL NAVARRO",
+        "VENTA AL PUBLICO EN GENERAL  - MV": "MIGUEL VALVERDE",
+        "VENTA AL PUBLICO EN GENERAL - AB": "ARTURO BARRADAS",
+        "VENTA AL PUBLICO EN GENERAL - AG": "ABELARDO GONZALEZ",
+        "VENTA AL PUBLICO EN GENERAL - AQ": "AQUA ELIT SA DE CV",
+        "VENTA AL PUBLICO EN GENERAL - CO": "COPROCAR",
+        "VENTA AL PUBLICO EN GENERAL-  COP": "COPOCAR SA DE CV",
+        "VENTA AL PUBLICO EN GENERAL - COV": "COVAGO CARNES SA DE CV",
+        "VENTA AL PUBLICO EN GENERAL - EG": "ROSARIO GONZALEZ SERRANO",
+        "VENTA AL PUBLICO EN GENERAL - FL": "FRANCISCO LOPEZ RAMIREZ",
+        "VENTA AL PUBLICO EN GENERAL - GT": "GILDARDO TORRES",
+        "VENTA AL PUBLICO EN GENERAL - IE": "IVAN ESTRADA ALVARADO",
+        "VENTA AL PUBLICO EN GENERAL - JC": "JAVIER CASTILLO VIVEROS",
+        "VENTA AL PUBLICO EN GENERAL - JM": "JONATHAN MARTINEZ BUSTOS",
+        "VENTA AL PUBLICO EN GENERAL - JRL": "JAVIER RAMIREZ LOPEZ",
+        "VENTA AL PUBLICO EN GENERAL - JS": "JUAN SANTIAGO SANTIAGO",
+        "VENTA AL PUBLICO EN GENERAL - JV": "JOSE ALFREDO VELA BARQUERA",
+        "VENTA AL PUBLICO EN GENERAL - JVG": "JOSUE VILLALPANDO GUZMAN",
+        "VENTA AL PUBLICO EN GENERAL - MG": "MARBUSTELL GRUPO COMERCIAL SA DE CV",
+        "VENTA AL PUBLICO EN GENERAL - ML": "MARIO LOPEZ VANZINI",
+        "VENTA AL PUBLICO EN GENERAL - MS": "MIGUEL ANGEL SANTIAGO HERNANDEZ",
+        "VENTA AL PUBLICO EN GENERAL - RB": "RAUL BOVIO GUERRERO",
+        "VENTA AL PUBLICO EN GENERAL - RC": "RAUL COSME",
+        "VENTA AL PUBLICO EN GENERAL - RS": "EZEQUIEL VAZQUEZ SERRANO",
+        "VENTA AL PUBLICO EN GENERAL - SP": "SAUL PEREZ",
+        "VENTA AL PUBLICO EN GENERAL - VE": "VICENTE ESTRADA DOMINGUEZ",
+        "VENTA AL PUBLICO EN GENERAL - YC": "CARNICERIA LA CABAÑA",
+        "VENTA AL PUBLICO EN GENERAL - AM": "ADRIAN MONTIEL PEÑA",
+        "VENTA AL PUBLICO GENERAL - OL": "OMAR LARA",
+        "VENTAS AL PUBLICO EN GENERAL - DG": "COMERCIALIZADORA MIZTLI & ELIZ S DE RL DE CV"
+    }
+
     for client, invoices_list in organized_invoices.items():
+        #client_emails = dict_clients_emails.get(client, [])
         client_emails = get_client_emails(client)
+
+        name_fiscal = None
+        names = []
+        names.append(client)
+        signal = False
+        for key, value in client_fiscal.items():
+            if client == key:
+                if value in list_clients:
+                    names.append(value)
+                    name_fiscal = names_email.get(key)
+
+                else:
+                    name_fiscal = names_email.get(key)
+            if client == value:
+                if key in list_clients:
+                    signal = True
+                else:
+                    pass
+        if signal:
+            continue
+
         if client_emails:
             for email in client_emails:
 
                 # Leer cada archivo CSV para calcular los balances vencidos
                 attachment_paths = []
 
-                #nuevo
-                names = []
-                names.append(client)
-                client_variant = get_client_fiscal(client)
-                if client_variant and client_variant in list_clients:
-                    names.append(client_variant)
-                else:
-                    pass
-
                 body_html = f"""
                 <html>
                     <body>
                         <img src="cid:image_1" alt="Logo" style="width:150px; margin-top: 20px;">
                         <h3 style="text-align: left;">ESTADO DE CUENTA</h3>
-                        <p>Estimado <strong>{client}</strong>,</p>
+                        <p>Estimado <strong>{name_fiscal if name_fiscal else client}</strong>,</p>
                         <p>Adjunto encontrará su estado de cuenta al día de hoy. Nuestro sistema muestra el siguiente balance vencido:</p>
 
                     </body>
@@ -330,7 +566,7 @@ def send_invoices_to_clients(organized_invoices, smtp_server, smtp_port, smtp_us
 
                 today = datetime.now()
                 format_date = today.strftime("%d/%m/%Y")
-                subject = f"Estado de Cuenta para {client} - {format_date}"
+                subject = f"Estado de Cuenta para {name_fiscal if name_fiscal else client} - {format_date}"
 
 
                 body_html += """
@@ -361,7 +597,7 @@ def send_invoices_to_clients(organized_invoices, smtp_server, smtp_port, smtp_us
                         attachment_paths.append(file_path)
 
                 body_html += """
-                    <p><br /><br /><strong>Cordial saludo</strong>, muchas gracias.</p>
+                    <p><br /><br /><strong>Saludos</strong>.</p>
                 """
                 body_html += f"""
                     <img src="cid:image_2" alt="Second Image" style="width:676px; margin-top: 20px; margin-bottom: 0;">
