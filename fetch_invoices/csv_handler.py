@@ -85,10 +85,11 @@ def export_invoices_to_csv(organized_invoices, output_dir="output"):
             with open(file_path, mode="w", newline="", encoding="utf-8") as file:
                 writer = csv.writer(file)
                 # Escribir el encabezado
-                writer.writerow(["Fecha", "Descripcion", "Factura", "PO", "Fecha Vencimiento", "Dias Vencidos",
-                                 "Total", "Balance"])
+                writer.writerow(["Fecha Factura", "Descripcion", "Factura", "PO", "Fecha Vencimiento", "Dias Vencidos",
+                                 "Total", "Balance", "Balance Vencido"])
 
                 accumulated_balance = Decimal("0")
+                overdue_balance = Decimal("0")
                 # Escribir los datos
                 for invoice in sorted_invoices:
                     # Factura
@@ -102,18 +103,18 @@ def export_invoices_to_csv(organized_invoices, output_dir="output"):
                     days_overdue = calculate_days_overdue(expiration_date)
                     expiration_date = format_date_to_text(invoice.get("ExpirationDate"))
 
+                    accumulated_balance += total
+                    formatted_accumulated_balance = format_decimal(accumulated_balance)
 
-                    if invoice["PaymentDetails"] == []:
-                        accumulated_balance += total
-                        formatted_accumulated_balance = format_decimal(accumulated_balance)
+                    if int(days_overdue) > 0:
+                        overdue_balance += total
+                        formatted_overdue_balance_total = format_decimal(overdue_balance)
                         writer.writerow([
                             invoice_date, "Factura", int(invoice_id or 0), int(purchase_order or 0),
-                            expiration_date, int(days_overdue), total, formatted_accumulated_balance
+                            expiration_date, int(days_overdue), total, formatted_accumulated_balance,
+                            formatted_overdue_balance_total
                         ])
                     else:
-                        # Agregar fila de factura sin cambios
-                        accumulated_balance += total
-                        formatted_accumulated_balance = format_decimal(accumulated_balance)
                         writer.writerow([
                             invoice_date, "Factura", int(invoice_id or 0), int(purchase_order or 0),
                             expiration_date, int(days_overdue), total, formatted_accumulated_balance
@@ -122,10 +123,15 @@ def export_invoices_to_csv(organized_invoices, output_dir="output"):
                     if credit_notes > 0:
                         accumulated_balance -= credit_notes
                         formatted_balance_nt = format_decimal(accumulated_balance)
-
+                        if int(days_overdue) > 0:
+                            overdue_balance -= credit_notes
+                            formatted_overdue_balance = format_decimal(accumulated_balance)
+                            writer.writerow([invoice_date, "Nota Credito", "", "", "", "",
+                                             f"({credit_notes})", formatted_balance_nt, formatted_overdue_balance])
                         # Agregar la fila de credit notes
-                        writer.writerow([invoice_date, "Nota Credito", "", "", "", "",
-                                         f"({credit_notes})", formatted_balance_nt])
+                        else:
+                            writer.writerow([invoice_date, "Nota Credito", "", "", "", "", f"({credit_notes})",
+                                             formatted_balance_nt])
 
                     # Agregar los pagos
                     if "PaymentDetails" in invoice:
@@ -147,9 +153,17 @@ def export_invoices_to_csv(organized_invoices, output_dir="output"):
                             formatted_amount_payment = format_decimal(amount)
                             formatted_remaining = format_decimal(accumulated_balance)
 
-                            # Agregar la fila de pago
-                            writer.writerow([application_date, "Pago", "", "", "", "",
-                                             f"({formatted_amount_payment})", formatted_remaining])
+                            if int(days_overdue) > 0:
+                                overdue_balance -= amount
+                                formatted_overdue = format_decimal(overdue_balance)
+                                writer.writerow([application_date, "Pago", "", "", "", "",
+                                                 f"({formatted_amount_payment})", formatted_remaining,
+                                                 formatted_overdue])
+
+                            else:
+                                # Agregar la fila de pago
+                                writer.writerow([application_date, "Pago", "", "", "", "",
+                                                 f"({formatted_amount_payment})", formatted_remaining])
 
             print(f"Invoices for client {client} in {currency} exported to {file_path}")
 
