@@ -29,13 +29,15 @@ def clean_filename(client_name):
     return cleaned_name
 
 
-def send_email_with_attachment(to_email, subject, html_body, attachment_paths, smtp_server, smtp_port, smtp_user,
+def send_email_with_attachment(to_emails, subject, html_body, attachment_paths, smtp_server, smtp_port, smtp_user,
                                smtp_password, client_name, image_paths=None):
+
+    to_emails_str = ", ".join(to_emails)
 
     # Code for GMAIL
     msg = MIMEMultipart()
     msg['From'] = smtp_user
-    msg['To'] = to_email
+    msg['To'] = to_emails_str
     msg['Subject'] = subject
 
     # Cuerpo del mensaje en HTML
@@ -69,11 +71,11 @@ def send_email_with_attachment(to_email, subject, html_body, attachment_paths, s
         server = smtplib.SMTP(smtp_server, smtp_port)
         server.starttls()
         server.login(smtp_user, smtp_password)
-        server.sendmail(smtp_user, to_email, msg.as_string())
+        server.sendmail(smtp_user, to_emails, msg.as_string())
         server.quit()
-        print(f"Email sent successfully for Client {client_name} to {to_email}")
+        print(f"Email sent successfully for Client {client_name} to {to_emails}")
     except Exception as e:
-        print(f"Failed to send email to {to_email}: {e}")
+        print(f"Failed to send email to {to_emails}: {e}")
 
     """
     # Code for Outlook
@@ -326,124 +328,123 @@ def send_invoices_to_clients(organized_invoices, smtp_server, smtp_port, smtp_us
             continue
 
         if client_emails:
-            for email in client_emails:
 
-                # Leer cada archivo CSV para calcular los balances vencidos
-                attachment_paths = []
+            # Leer cada archivo CSV para calcular los balances vencidos
+            attachment_paths = []
 
-                body_html = f"""
-                <html>
-                    <body>
-                        <img src="cid:image_1" alt="Logo" style="width:150px; margin-top: 20px;">
-                        <h3 style="text-align: left;">ESTADO DE CUENTA</h3>
-                        <p>Estimado <strong>{name_fiscal if name_fiscal else client}</strong>,</p>
-                        <p>Adjunto encontrará su estado de cuenta al día de hoy. Nuestro sistema muestra el siguiente balance vencido:</p>
+            body_html = f"""
+            <html>
+                <body>
+                    <img src="cid:image_1" alt="Logo" style="width:150px; margin-top: 20px;">
+                    <h3 style="text-align: left;">ESTADO DE CUENTA</h3>
+                    <p>Estimado <strong>{name_fiscal if name_fiscal else client}</strong>,</p>
+                    <p>Adjunto encontrará su estado de cuenta al día de hoy. Nuestro sistema muestra el siguiente balance vencido:</p>
 
-                    </body>
+                </body>
+            </html>
+            """
+            currency_types = ["MXN", "USD"]
+            for currency in currency_types:
+                # Determinar moneda a partir del nombre del archivo
+
+                for name in names:
+
+                    balance_vencido_mxn = 0
+                    balance_vencido_usd = 0
+
+                    file_name_client = generate_file_name(name, currency)
+                    file_path = os.path.join("output", file_name_client)
+
+                    if not os.path.exists(file_path):
+                        print(f"Archivo {file_path} no encontrado. Continuando con la siguiente iteración.")
+                        continue
+
+                    # Leer el CSV para obtener el balance vencido
+                    try:
+                        df = pd.read_csv(file_path)
+                        if "Balance Vencido" in df.columns and not df.empty:
+                            last_balance = df["Balance Vencido"].dropna().iloc[-1]  # Último valor de la columna "Balance Positivo"
+                            last_balance = float(last_balance) if pd.notna(last_balance) else 0
+
+                            if currency == "MXN":
+                                balance_vencido_mxn += last_balance
+                            elif currency == "USD":
+                                balance_vencido_usd += last_balance
+                    except Exception as e:
+                        print(f"Error reading {file_path}: {e}")
+                        continue
+
+                    # Generar tabla HTML para el archivo y agregar al cuerpo del correo
+                    attachment_paths.append(file_path)
+
+                    if balance_vencido_mxn != 0:
+                        body_html += f"""
+                                <!-- Tabla para MXN -->
+                                <p>Balance Vencido para <strong>{name}</strong></p>
+                                <table style="border-collapse: collapse; text-align: left; margin-bottom: 15px;">
+                                    <tr>
+                                        <td style="padding: 4px; border: 2px solid black; background-color: #307BDA; color: #000000; width: 80px; height: 25px; text-align: center; white-space: nowrap;"><strong>MXN:</strong></td>
+                                        <td style="padding: 4px; border: 2px solid black; width: 80px; height: 25px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{balance_vencido_mxn:,.2f}</td>
+                                    </tr>
+                                </table>
+
+
+                        """
+                    if balance_vencido_usd != 0:
+                        body_html += f"""                    
+                                <!-- Tabla para USD -->
+                                <p>Balance Vencido para <strong>{name}</strong></p>
+                                <table style="border-collapse: collapse; text-align: left; margin-bottom: 15px;">
+                                    <tr>
+                                        <td style="padding: 4px; border: 2px solid black; background-color: #307BDA; color: #000000; width: 80px; height: 25px; text-align: center; white-space: nowrap;"><strong>USD:</strong></td>
+                                        <td style="padding: 4px; border: 2px solid black; width: 80px; height: 25px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{balance_vencido_usd:,.2f}</td>
+                                    </tr>
+                                </table>
+                        """
+
+            today = datetime.now()
+            format_date = today.strftime("%d/%m/%Y")
+            subject = f"Estado de Cuenta para {name_fiscal if name_fiscal else client} - {format_date}"
+
+
+            body_html += """
+                <p>Si el pago ha sido realizado, favor de omitir este mensaje.</p>
+                <p>Si usted tiene alguna pregunta sobre su estado de cuenta, por favor contactarse con nosotros.</p>
+                <p>Agradeciendo la atención a la presente, por su apoyo y continuo negocio.</p>
+
+            """
+
+            # Ruta de la imagen
+            image_paths = ["images/first_logo.png", "images/second_logo.png"]
+
+            attachment_paths = []
+
+            for currency in currency_types:
+                for name in names:
+                    file_name_client = generate_file_name(name, currency)
+
+                    file_path = os.path.join("output", file_name_client)
+
+                    if not os.path.exists(file_path):
+                        print(f"Archivo {file_path} no encontrado. Continuando con la siguiente iteración.")
+                        continue
+
+                    # Generar tabla HTML y agregar al cuerpo del correo
+                    body_html += csv_to_html_table(file_path, name, currency)
+                    # Agregar archivo a la lista de adjuntos
+                    attachment_paths.append(file_path)
+
+            body_html += """
+                <p><br /><br /><strong>Saludos</strong>.</p>
+            """
+            body_html += f"""
+                <img src="cid:image_2" alt="Second Image" style="width:676px; margin-top: 20px; margin-bottom: 0;">
+                </body>
                 </html>
                 """
-                currency_types = ["MXN", "USD"]
-                for currency in currency_types:
-                    # Determinar moneda a partir del nombre del archivo
 
-                    for name in names:
-
-                        balance_vencido_mxn = 0
-                        balance_vencido_usd = 0
-
-                        file_name_client = generate_file_name(name, currency)
-                        file_path = os.path.join("output", file_name_client)
-
-                        if not os.path.exists(file_path):
-                            print(f"Archivo {file_path} no encontrado. Continuando con la siguiente iteración.")
-                            continue
-
-                        # Leer el CSV para obtener el balance vencido
-                        try:
-                            df = pd.read_csv(file_path)
-                            if "Balance Vencido" in df.columns and not df.empty:
-                                last_balance = df["Balance Vencido"].dropna().iloc[-1]  # Último valor de la columna "Balance Positivo"
-                                last_balance = float(last_balance) if pd.notna(last_balance) else 0
-
-                                if currency == "MXN":
-                                    balance_vencido_mxn += last_balance
-                                elif currency == "USD":
-                                    balance_vencido_usd += last_balance
-                        except Exception as e:
-                            print(f"Error reading {file_path}: {e}")
-                            continue
-
-                        # Generar tabla HTML para el archivo y agregar al cuerpo del correo
-                        attachment_paths.append(file_path)
-
-                        if balance_vencido_mxn != 0:
-                            body_html += f"""
-                                    <!-- Tabla para MXN -->
-                                    <p>Balance Vencido para <strong>{name}</strong></p>
-                                    <table style="border-collapse: collapse; text-align: left; margin-bottom: 15px;">
-                                        <tr>
-                                            <td style="padding: 4px; border: 2px solid black; background-color: #307BDA; color: #000000; width: 80px; height: 25px; text-align: center; white-space: nowrap;"><strong>MXN:</strong></td>
-                                            <td style="padding: 4px; border: 2px solid black; width: 80px; height: 25px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{balance_vencido_mxn:,.2f}</td>
-                                        </tr>
-                                    </table>
-
-
-                            """
-                        if balance_vencido_usd != 0:
-                            body_html += f"""                    
-                                    <!-- Tabla para USD -->
-                                    <p>Balance Vencido para <strong>{name}</strong></p>
-                                    <table style="border-collapse: collapse; text-align: left; margin-bottom: 15px;">
-                                        <tr>
-                                            <td style="padding: 4px; border: 2px solid black; background-color: #307BDA; color: #000000; width: 80px; height: 25px; text-align: center; white-space: nowrap;"><strong>USD:</strong></td>
-                                            <td style="padding: 4px; border: 2px solid black; width: 80px; height: 25px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{balance_vencido_usd:,.2f}</td>
-                                        </tr>
-                                    </table>
-                            """
-
-                today = datetime.now()
-                format_date = today.strftime("%d/%m/%Y")
-                subject = f"Estado de Cuenta para {name_fiscal if name_fiscal else client} - {format_date}"
-
-
-                body_html += """
-                    <p>Si el pago ha sido realizado, favor de omitir este mensaje.</p>
-                    <p>Si usted tiene alguna pregunta sobre su estado de cuenta, por favor contactarse con nosotros.</p>
-                    <p>Agradeciendo la atención a la presente, por su apoyo y continuo negocio.</p>
-
-                """
-
-                # Ruta de la imagen
-                image_paths = ["images/first_logo.png", "images/second_logo.png"]
-
-                attachment_paths = []
-
-                for currency in currency_types:
-                    for name in names:
-                        file_name_client = generate_file_name(name, currency)
-
-                        file_path = os.path.join("output", file_name_client)
-
-                        if not os.path.exists(file_path):
-                            print(f"Archivo {file_path} no encontrado. Continuando con la siguiente iteración.")
-                            continue
-
-                        # Generar tabla HTML y agregar al cuerpo del correo
-                        body_html += csv_to_html_table(file_path, name, currency)
-                        # Agregar archivo a la lista de adjuntos
-                        attachment_paths.append(file_path)
-
-                body_html += """
-                    <p><br /><br /><strong>Saludos</strong>.</p>
-                """
-                body_html += f"""
-                    <img src="cid:image_2" alt="Second Image" style="width:676px; margin-top: 20px; margin-bottom: 0;">
-                    </body>
-                    </html>
-                    """
-
-                # Enviar correo con tablas y archivos adjuntos
-                send_email_with_attachment(email, subject, body_html, attachment_paths, smtp_server, smtp_port,
-                                           smtp_user, smtp_password, client, image_paths)
+            # Enviar correo con tablas y archivos adjuntos
+            send_email_with_attachment(client_emails, subject, body_html, attachment_paths, smtp_server, smtp_port,
+                                       smtp_user, smtp_password, client, image_paths)
         else:
             print(f"Email not found for client {client}")
