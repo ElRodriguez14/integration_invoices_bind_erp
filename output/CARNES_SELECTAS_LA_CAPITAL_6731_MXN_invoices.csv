@@ -1,3 +1,4 @@
 Fecha Factura,Descripcion,Factura,PO,Fecha Vencimiento,Dias Vencidos,Total,Balance,Balance Vencido
-Enero 13 2025,Factura,9171,22928,Febrero 12 2025,-7,850404.27,850404.27
-Enero 30 2025,Factura,9453,22963,Marzo 01 2025,-24,866520.02,1716924.29
+30 enero 2025,Factura,9453,22963,01 marzo 2025,-19,866520.02,866520.02
+07 febrero 2025,Factura,9595,23347,09 marzo 2025,-27,833840.24,1700360.26
+07 febrero 2025,Nota Credito,,,,,(452.25),1699908.01

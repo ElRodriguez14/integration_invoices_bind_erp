@@ -17,9 +17,20 @@ import win32com.client as win32
 def get_client_emails(client_name):
     # Diccionario con los correos electrónicos de los clientes
     client_emails = {
-    "CARNES Y ABARROTES A A A": ["oscarduvan20667@gmail.com"],
-    "DISTRIBUIDORA DE CARNES EL JAROCHO": ["oscarduvan20667@gmail.com"],
-    '"ALIMENTOS KARULY"': ["oscarduvan20667@gmail.com"],
+    "VENTA AL PUBLICO EN GENERAL - RB": ["mpleininger@isafoods.com", "mgomez@isafoods.com"],
+    "VENTA AL PUBLICO EN GENERAL - SP": ["mpleininger@isafoods.com", "mgomez@isafoods.com"],
+    "VENTA AL PUBLICO EN GENERAL  - CF": ["mpleininger@isafoods.com", "mgomez@isafoods.com"],
+    "VENTA AL PUBLICO EN GENERAL - ML": ["mpleininger@isafoods.com", "mgomez@isafoods.com"],
+    "VENTA AL PUBLICO EN GENERAL - RS": ["mpleininger@isafoods.com", "mgomez@isafoods.com"],
+    "VENTA AL PUBLICO EN GENERAL  - RC": ["mpleininger@isafoods.com", "mgomez@isafoods.com"],
+    "VENTA AL PUBLICO EN GENERAL -AM": ["mpleininger@isafoods.com", "mgomez@isafoods.com"],
+    "VENTA AL PUBLICO EN GENERAL - IA": ["mpleininger@isafoods.com", "mgomez@isafoods.com"],
+    "VENTA AL PUBLICO EN GENERAL - IE": ["mpleininger@isafoods.com", "mgomez@isafoods.com"],
+    "VENTA AL PUBLICO EN GENERAL  - MC": ["mpleininger@isafoods.com", "mgomez@isafoods.com"],
+    "VENTA AL PUBLICO EN GENERAL - FL": ["mpleininger@isafoods.com", "mgomez@isafoods.com"],
+    "VENTA AL PUBLICO EN GENERAL  - MA": ["mpleininger@isafoods.com", "mgomez@isafoods.com"],
+    "VENTA AL PUBLICO EN GENERAL - AB": ["mpleininger@isafoods.com", "mgomez@isafoods.com"],
+    "KAREY ALIMENTOS": ["oscarduvan20667@gmail.com"],
     }
     return client_emails.get(client_name, [])  # Retorna None si no encuentra el cliente
 
@@ -245,14 +256,14 @@ def send_invoices_to_clients(organized_invoices, smtp_server, smtp_port, smtp_us
         "VENTA AL PUBLICO EN GENERAL - ML": "MARIO LOPEZ VANZINI",
         "VENTA AL PUBLICO EN GENERAL - MS": "MIGUEL ANGEL SANTIAGO HERNANDEZ",
         "VENTA AL PUBLICO EN GENERAL - RB": "RAUL BOVIO GUERRERO",
-        "VENTA AL PUBLICO EN GENERAL - RC": "RAUL COSME",
+        "VENTA AL PUBLICO EN GENERAL  - RC": "RAUL COSME",
         "VENTA AL PUBLICO EN GENERAL - RS": "EZEQUIEL VAZQUEZ SERRANO", #LA UNION
         "VENTA AL PUBLICO EN GENERAL - SP": "SAUL PEREZ",
         "VENTA AL PUBLICO EN GENERAL - VE": "VICENTE ESTRADA DOMINGUEZ",
         "VENTA AL PUBLICO EN GENERAL - YC": "CARNICERIA LA CABAÑA",
         "VENTA AL PUBLICO EN GENERAL -AM": "ADRIAN MONTIEL PEÑA",
         "VENTA AL PUBLICO GENERAL - OL": "OMAR LARA",
-        "VENTAS AL PUBLICO EN GENERAL - DG": "COMERCIALIZADORA MIZTLI & ELIZ S DE RL DE CV"
+        #"VENTAS AL PUBLICO EN GENERAL - DG": "COMERCIALIZADORA MIZTLI & ELIZ S DE RL DE CV"
     }
 
     names_email = {
@@ -293,14 +304,14 @@ def send_invoices_to_clients(organized_invoices, smtp_server, smtp_port, smtp_us
         "VENTA AL PUBLICO EN GENERAL - ML": "MARIO LOPEZ VANZINI",
         "VENTA AL PUBLICO EN GENERAL - MS": "MIGUEL ANGEL SANTIAGO HERNANDEZ",
         "VENTA AL PUBLICO EN GENERAL - RB": "RAUL BOVIO GUERRERO",
-        "VENTA AL PUBLICO EN GENERAL - RC": "RAUL COSME",
-        "VENTA AL PUBLICO EN GENERAL - RS": "EZEQUIEL VAZQUEZ SERRANO",
+        "VENTA AL PUBLICO EN GENERAL  - RC": "RAUL COSME",
+        "VENTA AL PUBLICO EN GENERAL - RS": "LA UNION",
         "VENTA AL PUBLICO EN GENERAL - SP": "SAUL PEREZ",
         "VENTA AL PUBLICO EN GENERAL - VE": "VICENTE ESTRADA DOMINGUEZ",
         "VENTA AL PUBLICO EN GENERAL - YC": "CARNICERIA LA CABAÑA",
         "VENTA AL PUBLICO EN GENERAL -AM": "ADRIAN MONTIEL PEÑA",
         "VENTA AL PUBLICO GENERAL - OL": "OMAR LARA",
-        "VENTAS AL PUBLICO EN GENERAL - DG": "COMERCIALIZADORA MIZTLI & ELIZ S DE RL DE CV"
+        "VENTAS AL PUBLICO EN GENERAL - DG": "DON GATO"
     }
 
     for client, invoices_list in organized_invoices.items():
@@ -351,6 +362,8 @@ def send_invoices_to_clients(organized_invoices, smtp_server, smtp_port, smtp_us
 
                     balance_vencido_mxn = 0
                     balance_vencido_usd = 0
+                    MXN = False
+                    USD = False
 
                     file_name_client = generate_file_name(name, currency)
                     file_path = os.path.join("output", file_name_client)
@@ -362,14 +375,23 @@ def send_invoices_to_clients(organized_invoices, smtp_server, smtp_port, smtp_us
                     # Leer el CSV para obtener el balance vencido
                     try:
                         df = pd.read_csv(file_path)
-                        if "Balance Vencido" in df.columns and not df.empty:
-                            last_balance = df["Balance Vencido"].dropna().iloc[-1]  # Último valor de la columna "Balance Positivo"
-                            last_balance = float(last_balance) if pd.notna(last_balance) else 0
+                        if "Balance Vencido" in df.columns:
+                            valores_no_nulos = df["Balance Vencido"].dropna()
 
-                            if currency == "MXN":
-                                balance_vencido_mxn += last_balance
-                            elif currency == "USD":
-                                balance_vencido_usd += last_balance
+                            if not valores_no_nulos.empty:  # Verificar si hay valores después de eliminar NaN
+                                last_balance = float(valores_no_nulos.iloc[-1])  # Obtener el último valor válido
+                            else:
+                                last_balance = 0  # Si no hay valores, asignar 0
+
+                        else:
+                            last_balance = 0
+
+                        if currency == "MXN":
+                            balance_vencido_mxn += last_balance
+                            MXN = True
+                        elif currency == "USD":
+                            balance_vencido_usd += last_balance
+                            USD = True
                     except Exception as e:
                         print(f"Error reading {file_path}: {e}")
                         continue
@@ -377,7 +399,7 @@ def send_invoices_to_clients(organized_invoices, smtp_server, smtp_port, smtp_us
                     # Generar tabla HTML para el archivo y agregar al cuerpo del correo
                     attachment_paths.append(file_path)
 
-                    if balance_vencido_mxn != 0:
+                    if MXN:
                         body_html += f"""
                                 <!-- Tabla para MXN -->
                                 <p>Balance Vencido para <strong>{name}</strong></p>
@@ -390,7 +412,7 @@ def send_invoices_to_clients(organized_invoices, smtp_server, smtp_port, smtp_us
 
 
                         """
-                    if balance_vencido_usd != 0:
+                    if USD:
                         body_html += f"""                    
                                 <!-- Tabla para USD -->
                                 <p>Balance Vencido para <strong>{name}</strong></p>

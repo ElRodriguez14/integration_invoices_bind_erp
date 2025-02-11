@@ -1,7 +1,8 @@
 Fecha Factura,Descripcion,Factura,PO,Fecha Vencimiento,Dias Vencidos,Total,Balance,Balance Vencido
-Noviembre 08 2024,Factura,8079,21605,Diciembre 08 2024,59,306888.32,306888.32,306888.32
-Noviembre 09 2024,Pago,,,,,(118803.35),188084.97,188084.97
-Noviembre 14 2024,Pago,,,,,(28316.03),159768.94,159768.94
-Noviembre 14 2024,Pago,,,,,(21688.32),138080.62,138080.62
-Diciembre 09 2024,Pago,,,,,(50000.00),88080.62,88080.62
-Diciembre 23 2024,Pago,,,,,(29950.00),58130.62,58130.62
+08 noviembre 2024,Factura,8079,21605,08 diciembre 2024,64,306888.32,306888.32,306888.32
+09 noviembre 2024,Pago,,,,,(118803.35),188084.97,188084.97
+14 noviembre 2024,Pago,,,,,(28316.03),159768.94,159768.94
+14 noviembre 2024,Pago,,,,,(21688.32),138080.62,138080.62
+09 diciembre 2024,Pago,,,,,(50000.00),88080.62,88080.62
+23 diciembre 2024,Pago,,,,,(29950.00),58130.62,58130.62
+05 febrero 2025,Pago,,,,,(10000.00),48130.62,48130.62

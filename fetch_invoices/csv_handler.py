@@ -41,7 +41,7 @@ def format_date_to_text(date_string):
         try:
             date_obj = datetime.strptime(date_string, fmt)
             locale.setlocale(locale.LC_TIME, 'es_ES.UTF-8')
-            formatted_date = date_obj.strftime("%B %d %Y")
+            formatted_date = date_obj.strftime("%d %B %Y")
             formatted_date = formatted_date.capitalize()
             locale.setlocale(locale.LC_TIME, '')
             return formatted_date

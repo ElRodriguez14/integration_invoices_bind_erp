@@ -1,7 +1,7 @@
 Fecha Factura,Descripcion,Factura,PO,Fecha Vencimiento,Dias Vencidos,Total,Balance,Balance Vencido
-Noviembre 29 2024,Factura,8391,22573,Diciembre 29 2024,38,50109.71,50109.71,50109.71
-Noviembre 29 2024,Nota Credito,,,,,(3789.81),46319.90,46319.90
-Enero 31 2025,Pago,,,,,(20000.00),26319.90,26319.90
-Enero 08 2025,Factura,9111,23144,Febrero 07 2025,-2,39257.32,65577.22
-Enero 08 2025,Factura,9110,22922,Febrero 07 2025,-2,38339.74,103916.96
-Febrero 01 2025,Factura,9497,23559,Marzo 03 2025,-26,36873.00,140789.96
+29 noviembre 2024,Factura,8391,22573,29 diciembre 2024,43,50109.71,50109.71,50109.71
+29 noviembre 2024,Nota Credito,,,,,(3789.81),46319.90,46319.90
+31 enero 2025,Pago,,,,,(20000.00),26319.90,26319.90
+08 enero 2025,Factura,9111,23144,07 febrero 2025,3,39257.32,65577.22,65577.22
+08 enero 2025,Factura,9110,22922,07 febrero 2025,3,38339.74,103916.96,103916.96
+01 febrero 2025,Factura,9497,23559,03 marzo 2025,-21,36873.00,140789.96

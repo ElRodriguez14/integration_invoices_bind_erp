@@ -1,4 +1,8 @@
 Fecha Factura,Descripcion,Factura,PO,Fecha Vencimiento,Dias Vencidos,Total,Balance,Balance Vencido
-Enero 30 2025,Factura,9457,23459,Febrero 14 2025,-9,428658.10,428658.10
-Enero 31 2025,Pago,,,,,(50000.00),378658.10
-Febrero 04 2025,Pago,,,,,(50000.00),328658.10
+30 enero 2025,Factura,9457,23459,14 febrero 2025,-4,428658.10,428658.10
+31 enero 2025,Pago,,,,,(50000.00),378658.10
+04 febrero 2025,Pago,,,,,(50000.00),328658.10
+05 febrero 2025,Pago,,,,,(50000.00),278658.10
+06 febrero 2025,Pago,,,,,(50000.00),228658.10
+07 febrero 2025,Pago,,,,,(50000.00),178658.10
+10 febrero 2025,Factura,9637,22977,25 febrero 2025,-15,429319.74,607977.84
