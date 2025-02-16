@@ -1,6 +1,7 @@
 import os
 import csv
 import locale
+import shutil
 
 from .data_processing import format_decimal
 from decimal import Decimal
@@ -63,9 +64,14 @@ def calculate_days_overdue(expiration_date):
         return 0
 
 
+def clear_output_directory(output_dir):
+    if os.path.exists(output_dir):
+        shutil.rmtree(output_dir)
+    os.makedirs(output_dir)
+
+
 def export_invoices_to_csv(organized_invoices, output_dir="output"):
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)  # Crear la carpeta si no existe
+    clear_output_directory(output_dir)
 
     for client, currencies in organized_invoices.items():
         for currency, invoices_list in currencies.items():

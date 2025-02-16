@@ -14,31 +14,30 @@ if __name__ == "__main__":
     print(f"Invoices organized by ClientName: {len(organized_invoices)} clients")
 
     print("Adding payment details...")
-    #add_payment_details_to_invoices(organized_invoices, API_CONFIG["token"], fetch_payment_details)
+    add_payment_details_to_invoices(organized_invoices, API_CONFIG["token"], fetch_payment_details)
 
     print("Exporting invoices to CSV...")
     output_dir = "output"
-    #export_invoices_to_csv(organized_invoices, output_dir)
+    export_invoices_to_csv(organized_invoices, output_dir)
 
     print("Sending invoices to clients...")
 
     smtp_server = "smtp.gmail.com"  # Cambia a tu servidor SMTP
     smtp_port = 587  # Usualmente 587 para TLS
-    #smtp_user = "integrationbind@gmail.com"  # Tu correo electrónico
     smtp_user = "estadodecuenta.isafoods@gmail.com"
-    #smtp_password = "rzsz lzyn rxxx yqsy"  # Tu contraseña
     smtp_password = "ahxl zltf upne vdkn"
-    #unify_clients_by_fiscal_name(organized_invoices)
 
     print("Fetching Clients...")
     data_clients = fetch_clients(API_CLIENTS["url"], API_CLIENTS["token"])
     dict_clients_emails = {}
     for item in data_clients:
-        client_name = item["ClientName"]
+        client_name = item["LegalName"]
         emails = item["Email"]
 
         if emails:
             email_list = emails.split(",") if emails else []
+            email_default = "no-reply@isafoods.com"
+            email_list.append(email_default)
             dict_clients_emails[client_name] = email_list
 
     list_clients = []
